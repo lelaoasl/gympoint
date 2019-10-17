@@ -1,6 +1,5 @@
 import * as Yup from 'yup';
 import Student from '../models/Student';
-import User from '../models/User';
 
 class StudentController {
   async store(req, res) {
@@ -18,11 +17,6 @@ class StudentController {
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'Validation fails' });
-    }
-    const user = await User.findByPk(req.userId);
-
-    if (!user) {
-      return res.status(400).json({ error: 'User does not have permission' });
     }
 
     const studentExists = await Student.findOne({
@@ -51,12 +45,6 @@ class StudentController {
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'Validation fails' });
-    }
-
-    const user = await User.findByPk(req.userId);
-
-    if (!user) {
-      return res.status(400).json({ error: 'User does not have permission' });
     }
 
     const { id } = req.params;
