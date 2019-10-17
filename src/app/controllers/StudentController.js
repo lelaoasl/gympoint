@@ -59,7 +59,8 @@ class StudentController {
       return res.status(400).json({ error: 'User does not have permission' });
     }
 
-    const { id, email } = req.body;
+    const { id } = req.params;
+    const { email } = req.body;
 
     const student = await Student.findByPk(id);
 
