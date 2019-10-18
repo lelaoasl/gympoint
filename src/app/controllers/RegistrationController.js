@@ -68,7 +68,7 @@ class RegistrationController {
 
     await Mail.sendMail({
       to: `${student.name} <${student.email}`,
-      subject: 'Registration successfully',
+      subject: 'Matrícula efetuada com sucesso',
       template: 'registration',
       context: {
         name: student.name,

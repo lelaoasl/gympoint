@@ -28,10 +28,21 @@ class HelpOrderController {
 
     const { answer } = await help_order.update(req.body);
 
+    // await Mail.sendMail({
+    //   to: `${student.name} <${student.email}`,
+    //   subject: 'Registration successfully',
+    //   text: `Question:${help_order.question} Answer:${help_order.answer}`,
+    // });
+
     await Mail.sendMail({
       to: `${student.name} <${student.email}`,
-      subject: 'Registration successfully',
-      text: `Question:${help_order.question} Answer:${help_order.answer}`,
+      subject: 'Resposta sobre sua pergunta',
+      template: 'helporder_answer',
+      context: {
+        name: student.name,
+        question: help_order.question,
+        answer: help_order.answer,
+      },
     });
 
     return res.json({
