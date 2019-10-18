@@ -1,4 +1,6 @@
 import HelpOrder from '../models/HelpOrder';
+import Mail from '../../lib/Mail';
+import Student from '../models/Student';
 
 class HelpOrderController {
   async index(req, res) {
@@ -20,7 +22,17 @@ class HelpOrderController {
 
     const help_order = await HelpOrder.findOne({ where: { id } });
 
+    const { student_id } = help_order;
+
+    const student = await Student.findByPk(student_id);
+
     const { answer } = await help_order.update(req.body);
+
+    await Mail.sendMail({
+      to: `${student.name} <${student.email}`,
+      subject: 'Registration successfully',
+      text: `Question:${help_order.question} Answer:${help_order.answer}`,
+    });
 
     return res.json({
       id,
