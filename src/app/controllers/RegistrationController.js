@@ -1,4 +1,6 @@
-import { addMonths, parseISO } from 'date-fns';
+import { addMonths, parseISO, format } from 'date-fns';
+import pt from 'date-fns/locale/pt';
+import * as Yup from 'yup';
 import Registration from '../models/Registration';
 import Student from '../models/Student';
 import Plan from '../models/Plan';
@@ -8,10 +10,22 @@ class RegistrationController {
   async index(req, res) {
     const registrations = await Registration.findAll();
 
-    return res.json(registrations);
+    const [id] = [registrations];
+
+    return res.json(id);
   }
 
   async store(req, res) {
+    const schema = Yup.object().shape({
+      start_date: Yup.date().required(),
+      student_id: Yup.number().required(),
+      plan_id: Yup.number().required(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Validation fails' });
+    }
+
     const { start_date, student_id, plan_id } = req.body;
 
     const student = await Student.findOne({ where: { id: student_id } });
@@ -55,7 +69,14 @@ class RegistrationController {
     await Mail.sendMail({
       to: `${student.name} <${student.email}`,
       subject: 'Registration successfully',
-      text: `Welcome to Gympoint, here are the details of your plan:Plan:${plan.title} and Price:${price} reais`,
+      template: 'registration',
+      context: {
+        name: student.name,
+        price: registration.price,
+        end_date: format(end_date, "'dia' dd 'de' MMMM', às' H:mm'h'", {
+          locale: pt,
+        }),
+      },
     });
 
     return res.json(registration);
