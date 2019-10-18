@@ -2,6 +2,7 @@ import { addMonths, parseISO } from 'date-fns';
 import Registration from '../models/Registration';
 import Student from '../models/Student';
 import Plan from '../models/Plan';
+import Mail from '../../lib/Mail';
 
 class RegistrationController {
   async index(req, res) {
@@ -49,6 +50,12 @@ class RegistrationController {
       start_date,
       end_date,
       price,
+    });
+
+    await Mail.sendMail({
+      to: `${student.name} <${student.email}`,
+      subject: 'Registration successfully',
+      text: `Welcome to Gympoint, here are the details of your plan:Plan:${plan.title} and Price:${price} reais`,
     });
 
     return res.json(registration);
