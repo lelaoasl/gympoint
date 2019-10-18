@@ -14,6 +14,21 @@ class HelpOrderController {
 
     return res.json(help_order);
   }
+
+  async update(req, res) {
+    const { id } = req.params;
+
+    const help_order = await HelpOrder.findOne({ where: { id } });
+
+    const { answer } = await help_order.update(req.body);
+
+    return res.json({
+      id,
+      question: help_order.question,
+      answer,
+      answerAt: help_order.answerAt,
+    });
+  }
 }
 
 export default new HelpOrderController();
