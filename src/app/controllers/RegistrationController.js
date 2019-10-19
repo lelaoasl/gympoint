@@ -84,6 +84,15 @@ class RegistrationController {
   }
 
   async update(req, res) {
+    const schema = Yup.object().shape({
+      start_date: Yup.date(),
+      student_id: Yup.number(),
+      plan_id: Yup.number(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Validation fails' });
+    }
     const { id } = req.params;
 
     const registration = await Registration.findByPk(id);
