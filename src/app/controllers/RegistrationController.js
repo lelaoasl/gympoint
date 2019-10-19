@@ -10,9 +10,7 @@ class RegistrationController {
   async index(req, res) {
     const registrations = await Registration.findAll();
 
-    const { id } = registrations;
-
-    return res.json(id);
+    return res.json(registrations);
   }
 
   async store(req, res) {
@@ -41,17 +39,20 @@ class RegistrationController {
     }
 
     let price = 0;
-    const end_date = addMonths(parseISO(start_date), 3);
+    let end_date = '';
 
     switch (plan.id) {
       case 1:
         price = 129.0;
+        end_date = addMonths(parseISO(start_date), 1);
         break;
       case 2:
         price = 387.0;
+        end_date = addMonths(parseISO(start_date), 3);
         break;
       case 3:
         price = 774.0;
+        end_date = addMonths(parseISO(start_date), 6);
         break;
       default:
         price = 0;
@@ -80,6 +81,31 @@ class RegistrationController {
     });
 
     return res.json(registration);
+  }
+
+  async update(req, res) {
+    const { id } = req.params;
+
+    const registration = await Registration.findByPk(id);
+
+    const { start_date, student_id, plan_id } = await registration.update(
+      req.body
+    );
+
+    return res.json({
+      id,
+      start_date,
+      student_id,
+      plan_id,
+    });
+  }
+
+  async delete(req, res) {
+    const { id } = req.params;
+
+    await Registration.destroy({ where: { id } });
+
+    return res.json();
   }
 }
 
