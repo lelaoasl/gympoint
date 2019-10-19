@@ -10,7 +10,7 @@ class RegistrationController {
   async index(req, res) {
     const registrations = await Registration.findAll();
 
-    const [id] = [registrations];
+    const { id } = registrations;
 
     return res.json(id);
   }

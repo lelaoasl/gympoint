@@ -1,3 +1,5 @@
+import { Op } from 'sequelize';
+import { startOfWeek, endOfWeek } from 'date-fns';
 import Checkin from '../models/Checkin';
 
 class CheckinController {
@@ -15,14 +17,21 @@ class CheckinController {
     const student_id = id;
 
     const checkins = await Checkin.findAll({
-      where: { student_id: id },
+      where: {
+        student_id: id,
+      },
     });
 
-    if (checkins.length >= 5) {
+    const checkinsWeek = {
+      [Op.between]: [
+        startOfWeek(checkins.createdAt),
+        endOfWeek(checkins.createdAt),
+      ],
+    };
+
+    if (checkinsWeek && checkins.length >= 5) {
       return res.status(400).json({ error: 'Max 5 checkins in 7 days' });
     }
-
-    // arrumar a validação de 5 x em 7 dias
 
     const checkin = await Checkin.create({
       student_id,
