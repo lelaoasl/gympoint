@@ -43,38 +43,20 @@ class RegistrationController {
 
     const { start_date, student_id, plan_id } = req.body;
 
-    const student = await Student.findOne({ where: { id: student_id } });
+    const registrationExists = await Registration.findOne({
+      where: { student_id },
+    });
 
-    if (!student) {
-      return res.status(400).json({ error: 'Student does not exist' });
+    if (registrationExists) {
+      return res
+        .status(400)
+        .json({ error: 'Registration with this student already exists' });
     }
 
     const plan = await Plan.findOne({ where: { id: plan_id } });
 
-    if (!plan) {
-      return res.status(400).json({ error: 'Plan does not exist' });
-    }
-
-    let price = 0;
-    let end_date = '';
-
-    switch (plan.id) {
-      case 1:
-        price = 129.0;
-        end_date = addMonths(parseISO(start_date), 1);
-        break;
-      case 2:
-        price = 387.0;
-        end_date = addMonths(parseISO(start_date), 3);
-        break;
-      case 3:
-        price = 774.0;
-        end_date = addMonths(parseISO(start_date), 6);
-        break;
-      default:
-        price = 0;
-        break;
-    }
+    const price = plan.duration * plan.price;
+    const end_date = addMonths(parseISO(start_date), plan.duration);
 
     if (isBefore(parseISO(start_date), new Date())) {
       return res.status(400).json({ error: 'Past dates are not permitted' });
@@ -88,12 +70,14 @@ class RegistrationController {
       price,
     });
 
+    const studentData = await Student.findByPk(student_id);
+
     await Mail.sendMail({
-      to: `${student.name} <${student.email}`,
+      to: `${studentData.name} <${studentData.email}`,
       subject: 'Matrícula efetuada com sucesso',
       template: 'registration',
       context: {
-        name: student.name,
+        name: studentData.name,
         price: plan.price,
         end_date: format(end_date, "'dia' dd 'de' MMMM', às' H:mm'h'", {
           locale: pt,
@@ -103,7 +87,7 @@ class RegistrationController {
 
     return res.json({
       id,
-      student,
+      student_id,
       plan,
       start_date,
       end_date,
@@ -124,30 +108,37 @@ class RegistrationController {
     const { id } = req.params;
     const { start_date, student_id, plan_id } = req.body;
 
-    const student = await Student.findOne({
-      where: { id: student_id },
-    });
-
-    if (!student) {
-      return res.status(400).json({ error: 'Student does not exist' });
-    }
-
-    const plan = await Plan.findOne({ where: { id: plan_id } });
-
-    if (!plan) {
-      return res.status(400).json({ error: 'Plan does not exist' });
-    }
-
     const registration = await Registration.findByPk(id);
 
-    await registration.update(req.body);
+    if (student_id !== registration.student_id) {
+      const registrationExists = await Registration.findOne({
+        where: { student_id },
+      });
 
-    return res.json({
-      id,
-      start_date,
-      student,
-      plan,
-    });
+      if (registrationExists) {
+        return res
+          .status(401)
+          .json({ error: 'Registration with this student already exists' });
+      }
+    }
+
+    const plan = await Plan.findByPk(plan_id);
+
+    let { price, end_date } = registration;
+
+    if (plan_id !== registration.plan_id) {
+      price = plan.duration * plan.price;
+      end_date = addMonths(parseISO(start_date), plan.duration);
+    }
+
+    if (start_date !== registration.start_date) {
+      end_date = addMonths(parseISO(start_date), plan.duration);
+    }
+
+    registration.update({ student_id, plan_id, start_date, end_date, price });
+    registration.save();
+
+    return res.json(registration);
   }
 
   async delete(req, res) {
