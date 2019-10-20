@@ -9,6 +9,7 @@ class StudentController {
         .email()
         .required(),
       age: Yup.number()
+        .positive()
         .integer()
         .required(),
       weight: Yup.number().required(),
@@ -38,7 +39,9 @@ class StudentController {
     const schema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
-      age: Yup.number().integer(),
+      age: Yup.number()
+        .positive()
+        .integer(),
       weight: Yup.number(),
       height: Yup.number(),
     });

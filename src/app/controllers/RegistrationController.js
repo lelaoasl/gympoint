@@ -8,7 +8,24 @@ import Mail from '../../lib/Mail';
 
 class RegistrationController {
   async index(req, res) {
-    const registrations = await Registration.findAll();
+    const { page = 1 } = req.query;
+    const registrations = await Registration.findAll({
+      attributes: ['id', 'start_date', 'end_date', 'price'],
+      limit: 20,
+      offset: (page - 1) * 10,
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'name', 'email', 'age', 'weight', 'height'],
+        },
+        {
+          model: Plan,
+          as: 'plan',
+          attributes: ['id', 'title', 'duration', 'price'],
+        },
+      ],
+    });
 
     return res.json(registrations);
   }

@@ -3,7 +3,13 @@ import Plan from '../models/Plan';
 
 class PlanController {
   async index(req, res) {
-    const plans = await Plan.findAll();
+    const { page = 1 } = req.query;
+    const plans = await Plan.findAll({
+      order: ['price'],
+      attributes: ['id', 'title', 'duration', 'price'],
+      limit: 20,
+      offset: (page - 1) * 20,
+    });
 
     return res.json(plans);
   }

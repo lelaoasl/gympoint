@@ -4,8 +4,21 @@ import Student from '../models/Student';
 
 class HelpOrderController {
   async index(req, res) {
-    const { id } = req.params;
-    const help_orders = await HelpOrder.findAll({ where: { student_id: id } });
+    if (req.params.id) {
+      const help_orders = await HelpOrder.findAll({
+        where: { student_id: req.params.id },
+      });
+      return res.json(help_orders);
+    }
+
+    const { page = 1 } = req.query;
+
+    const help_orders = await HelpOrder.findAll({
+      where: { answer: null },
+      limit: 20,
+      offset: (page - 1) * 20,
+    });
+
     return res.json(help_orders);
   }
 
@@ -28,12 +41,6 @@ class HelpOrderController {
 
     const { answer } = await help_order.update(req.body);
 
-    // await Mail.sendMail({
-    //   to: `${student.name} <${student.email}`,
-    //   subject: 'Registration successfully',
-    //   text: `Question:${help_order.question} Answer:${help_order.answer}`,
-    // });
-
     await Mail.sendMail({
       to: `${student.name} <${student.email}`,
       subject: 'Resposta sobre sua pergunta',
@@ -49,7 +56,7 @@ class HelpOrderController {
       id,
       question: help_order.question,
       answer,
-      answerAt: help_order.answerAt,
+      answerAt: new Date(),
     });
   }
 }

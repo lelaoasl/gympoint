@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek } from 'date-fns';
 import Checkin from '../models/Checkin';
 
 class CheckinController {
