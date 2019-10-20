@@ -12,7 +12,7 @@ class RegistrationController {
     const registrations = await Registration.findAll({
       attributes: ['id', 'start_date', 'end_date', 'price'],
       limit: 20,
-      offset: (page - 1) * 10,
+      offset: (page - 1) * 20,
       include: [
         {
           model: Student,
@@ -122,8 +122,15 @@ class RegistrationController {
       return res.status(400).json({ error: 'Validation fails' });
     }
     const { id } = req.params;
+    const { start_date, student_id, plan_id } = req.body;
 
-    const { plan_id } = req.body;
+    const student = await Student.findOne({
+      where: { id: student_id },
+    });
+
+    if (!student) {
+      return res.status(400).json({ error: 'Student does not exist' });
+    }
 
     const plan = await Plan.findOne({ where: { id: plan_id } });
 
@@ -133,10 +140,11 @@ class RegistrationController {
 
     const registration = await Registration.findByPk(id);
 
-    const { student } = await registration.update(req.body);
+    await registration.update(req.body);
 
     return res.json({
       id,
+      start_date,
       student,
       plan,
     });
