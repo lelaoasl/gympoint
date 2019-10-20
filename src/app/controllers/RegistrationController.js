@@ -1,4 +1,4 @@
-import { addMonths, parseISO, format } from 'date-fns';
+import { addMonths, isBefore, parseISO, format } from 'date-fns';
 import pt from 'date-fns/locale/pt';
 import * as Yup from 'yup';
 import Registration from '../models/Registration';
@@ -76,7 +76,11 @@ class RegistrationController {
         break;
     }
 
-    const registration = await Registration.create({
+    if (isBefore(parseISO(start_date), new Date())) {
+      return res.status(400).json({ error: 'Past dates are not permitted' });
+    }
+
+    const { id } = await Registration.create({
       student_id,
       plan_id,
       start_date,
@@ -90,21 +94,28 @@ class RegistrationController {
       template: 'registration',
       context: {
         name: student.name,
-        price: registration.price,
+        price: plan.price,
         end_date: format(end_date, "'dia' dd 'de' MMMM', às' H:mm'h'", {
           locale: pt,
         }),
       },
     });
 
-    return res.json(registration);
+    return res.json({
+      id,
+      student,
+      plan,
+      start_date,
+      end_date,
+      price,
+    });
   }
 
   async update(req, res) {
     const schema = Yup.object().shape({
-      start_date: Yup.date(),
-      student_id: Yup.number(),
-      plan_id: Yup.number(),
+      start_date: Yup.date().required(),
+      student_id: Yup.number().required(),
+      plan_id: Yup.number().required(),
     });
 
     if (!(await schema.isValid(req.body))) {
@@ -112,17 +123,22 @@ class RegistrationController {
     }
     const { id } = req.params;
 
+    const { plan_id } = req.body;
+
+    const plan = await Plan.findOne({ where: { id: plan_id } });
+
+    if (!plan) {
+      return res.status(400).json({ error: 'Plan does not exist' });
+    }
+
     const registration = await Registration.findByPk(id);
 
-    const { start_date, student_id, plan_id } = await registration.update(
-      req.body
-    );
+    const { student } = await registration.update(req.body);
 
     return res.json({
       id,
-      start_date,
-      student_id,
-      plan_id,
+      student,
+      plan,
     });
   }
 
