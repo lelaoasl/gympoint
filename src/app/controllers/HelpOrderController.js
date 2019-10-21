@@ -36,11 +36,11 @@ class HelpOrderController {
     if (req.params.answerid) {
       const { answerid } = req.params;
 
-      const { question, answer } = req.body;
+      const { answer } = req.body;
 
       const help_order = await HelpOrder.findByPk(answerid);
 
-      const { student_id } = help_order;
+      const { question, student_id } = help_order;
 
       const help_order_answer = await HelpOrder.create({
         student_id,
@@ -48,41 +48,23 @@ class HelpOrderController {
         answer,
         answerAt: new Date(),
       });
+      const student = await Student.findByPk(student_id);
+
+      await Mail.sendMail({
+        to: `${student.name} <${student.email}`,
+        subject: 'Resposta sobre sua pergunta',
+        template: 'helporder_answer',
+        context: {
+          name: student.name,
+          question,
+          answer,
+        },
+      });
 
       return res.json(help_order_answer);
     }
 
     return res.json();
-  }
-
-  async update(req, res) {
-    const { id } = req.params;
-
-    const help_order = await HelpOrder.findOne({ where: { id } });
-
-    const { student_id } = help_order;
-
-    const student = await Student.findByPk(student_id);
-
-    const { answer } = await help_order.update(req.body);
-
-    await Mail.sendMail({
-      to: `${student.name} <${student.email}`,
-      subject: 'Resposta sobre sua pergunta',
-      template: 'helporder_answer',
-      context: {
-        name: student.name,
-        question: help_order.question,
-        answer: help_order.answer,
-      },
-    });
-
-    return res.json({
-      id,
-      question: help_order.question,
-      answer,
-      answerAt: new Date(),
-    });
   }
 }
 
