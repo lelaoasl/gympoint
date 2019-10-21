@@ -23,11 +23,36 @@ class HelpOrderController {
   }
 
   async store(req, res) {
-    const { id } = req.params;
+    if (req.params.id) {
+      const { id } = req.params;
 
-    const help_order = await HelpOrder.create({ student_id: id });
+      const { question } = req.body;
 
-    return res.json(help_order);
+      const help_order = await HelpOrder.create({ student_id: id, question });
+
+      return res.json(help_order);
+    }
+
+    if (req.params.answerid) {
+      const { answerid } = req.params;
+
+      const { question, answer } = req.body;
+
+      const help_order = await HelpOrder.findByPk(answerid);
+
+      const { student_id } = help_order;
+
+      const help_order_answer = await HelpOrder.create({
+        student_id,
+        question,
+        answer,
+        answerAt: new Date(),
+      });
+
+      return res.json(help_order_answer);
+    }
+
+    return res.json();
   }
 
   async update(req, res) {

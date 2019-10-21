@@ -18,11 +18,12 @@ routes.post('/students/:id/checkins', CheckinController.store);
 
 routes.post('/students/:id/help-orders', HelpOrderController.store);
 
+routes.get('/students/:id/help-orders', HelpOrderController.index);
+
 routes.use(authMiddleware);
 
-routes.put('/help-orders/:id/answer', HelpOrderController.update);
 routes.get('/students/help-orders', HelpOrderController.index);
-routes.get('/students/:id/help-orders', HelpOrderController.index);
+routes.post('/help-orders/:answerid/answer', HelpOrderController.store);
 
 routes.post('/students', StudentController.store);
 routes.put('/students/:id', StudentController.update);
